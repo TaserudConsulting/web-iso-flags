@@ -11,7 +11,7 @@
     flake-utils,
     nixpkgs,
     ...
-  } @ inputs: (flake-utils.lib.eachDefaultSystem (system: let
+  } @ inputs: (flake-utils.lib.eachSystem [ "aarch64-linux" "x86_64-linux" ] (system: let
     pkgs = nixpkgs.legacyPackages.${system};
   in {
     # Specify formatter package for "nix fmt ." and "nix fmt . -- --check"
