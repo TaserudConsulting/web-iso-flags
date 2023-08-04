@@ -38,5 +38,19 @@
         done
       '';
     };
+
+    checks.outputhash = pkgs.stdenv.mkDerivation {
+      pname = "${self.packages.${system}.default.pname}-outputhash-check";
+      inherit (self.packages.${system}.default) version;
+      dontBuild = true;
+
+      src = self.packages.${system}.default;
+
+      installPhase = ''
+        sha512sum -c ${./output-hashes.sha512sum}
+
+        touch $out
+      '';
+    };
   }));
 }
