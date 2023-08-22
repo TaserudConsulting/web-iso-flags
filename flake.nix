@@ -11,46 +11,40 @@
     flake-utils,
     nixpkgs,
     ...
-  } @ inputs: (flake-utils.lib.eachSystem [ "aarch64-linux" "x86_64-linux" ] (system: let
+  } @ inputs: (flake-utils.lib.eachSystem ["aarch64-linux" "x86_64-linux"] (system: let
     pkgs = nixpkgs.legacyPackages.${system};
   in {
     # Specify formatter package for "nix fmt ." and "nix fmt . -- --check"
     formatter = pkgs.alejandra;
 
     # Expose the theme files.
-    packages.default = pkgs.stdenv.mkDerivation {
-      pname = "iso-flags-for-web";
-      inherit (pkgs.iso-flags) version;
-
-      src = pkgs.iso-flags;
-
-      installPhase = ''
+    packages.default =
+      pkgs.runCommandNoCC "iso-flags-for-web" {
+        nativeBuildInputs = [pkgs.inkscape];
+      } ''
         mkdir $out
 
         # Copy raw SVG files
-        cp -vr share/iso-flags/svg-country-4x2-simple/* $out
-        cp -vr share/iso-flags/common/4x2-back-shadow.png $out/back.png
+        cp -vr ${pkgs.iso-flags}/share/iso-flags/svg-country-4x2-simple/*.svg $out
+        cp -vr ${pkgs.iso-flags}/share/iso-flags/svg-country-4x2-simple/fore.png $out/fore.png
+        cp -vr ${pkgs.iso-flags}/share/iso-flags/common/4x2-back-shadow.png $out/back.png
+
+        cd $out
 
         # Process them
-        for input in $out/*.svg; do
-          echo "Processing $(basename $input)"
-          ${pkgs.inkscape}/bin/inkscape --export-type=svg --export-filename=$input --export-plain-svg $input
+        for input in *.svg; do
+          echo "Processing $input"
+          inkscape --export-type=svg --export-filename=_tmp_.svg --export-plain-svg $input
+          mv _tmp_.svg $input
         done
       '';
-    };
 
-    checks.outputhash = pkgs.stdenv.mkDerivation {
-      pname = "${self.packages.${system}.default.pname}-outputhash-check";
-      inherit (self.packages.${system}.default) version;
-      dontBuild = true;
+    checks.outputhash = pkgs.runCommandNoCC "iso-flags-for-web-outputhash-check" {} ''
+      cd ${self.packages.${system}.default}
 
-      src = self.packages.${system}.default;
+      sha512sum -c ${./output-hashes.sha512sum}
 
-      installPhase = ''
-        sha512sum -c ${./output-hashes.sha512sum}
-
-        touch $out
-      '';
-    };
+      touch $out
+    '';
   }));
 }
