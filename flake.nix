@@ -2,7 +2,6 @@
   description = "ISO SVG flags that works on the web";
 
   inputs = {
-    nixpkgs.url = github:NixOS/nixpkgs/nixos-unstable-small;
     flake-utils.url = "flake-utils";
   };
 
