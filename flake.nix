@@ -18,7 +18,7 @@
 
     # Expose the theme files.
     packages.default =
-      pkgs.runCommandNoCC "iso-flags-for-web" {
+      pkgs.runCommand "iso-flags-for-web" {
         nativeBuildInputs = [pkgs.inkscape];
       } ''
         mkdir $out
